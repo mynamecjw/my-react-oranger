@@ -1,8 +1,13 @@
 import React, { Component } from "react";
 // 导入antd组件
-import { Button, Table, Tooltip, Input } from "antd";
+import { Button, Table, Tooltip, Input, message, Modal } from "antd";
 // 导入antd-图标
-import { PlusOutlined, DeleteOutlined, FormOutlined } from "@ant-design/icons";
+import {
+  PlusOutlined,
+  DeleteOutlined,
+  FormOutlined,
+  ExclamationCircleOutlined,
+} from "@ant-design/icons";
 
 // 导入connect
 import { connect } from "react-redux";
@@ -11,20 +16,30 @@ import { connect } from "react-redux";
 // import { reqGetSubjectList } from '@api/edu/subject'
 
 // 导入redux中的异步anction
-import { getSubjectList, getSecSubjectList } from "./redux";
+import {
+  getSubjectList,
+  getSecSubjectList,
+  updateSubject,
+  subjectList,
+} from "./redux";
+
+// 导入删除课程分类数据的方法
+import { reqDelSubject } from "@api/edu/subject";
 
 //导入样式文件
 import "./index.less";
 
+const { confirm } = Modal;
 // {subjectList: {total:0, items: []}}
 @connect(
   (state) => ({ subjectList: state.subjectList }),
   // 这里传入的是一个异步action.但是在展示组件中使用的函数,是通过connect进行封装之后的,虽然函数名一样,但是并不是同一个函数
-  { getSubjectList, getSecSubjectList }
+  { getSubjectList, getSecSubjectList, updateSubject }
 )
 class Subject extends Component {
   // 直接给当前组件实例,添加currentPage属性,表示当前是第几页
   currentPage = 1;
+  pageSize = 10;
 
   state = {
     // subjectId的作用
@@ -68,6 +83,7 @@ class Subject extends Component {
     this.props.getSubjectList(current, size);
     // 动态给currentPage赋值,保证当前高亮的页码和实际获取的页码数据保持一致
     this.currentPage = current;
+    this.pageSize = size;
   };
 
   // 点击跳转到添加课程分类中
@@ -107,6 +123,79 @@ class Subject extends Component {
     });
   };
 
+  // 取消按钮的事件处理函数
+  handleCancle = () => {
+    this.setState({
+      subjectId: "",
+      subjectTitle: "",
+    });
+  };
+  // 更新确认按钮的时间处理函数
+  handleUpdate = async () => {
+    let { subjectId, subjectTitle } = this.state;
+
+    // 优化
+    // 1.如果用户输入的是空字符串,就不执行后面操作
+    if (subjectTitle.length === 0) {
+      message.error("课程分类名称不能为空");
+      return;
+    }
+    // 2.如果用户输入的内容和原来的内容相同,则不执行后面的操作
+    // 思路:点击更新按钮的时候,把旧的课程分类名称存起来,点击确认的时候,用新数据(subjectTitle) 和老数据进行比较
+    if (this.oldSubjectTitle === subjectTitle) {
+      message.error("课程分类名称不能和之前的相同");
+      return;
+    }
+    // 在异步操作之前加一个await 就可以让异步执行完毕之后,再执行后面的代码
+
+    await this.props.updateSubject(subjectTitle, subjectId);
+    message.success("更新成功");
+    // 手动调用取消按钮的事件处理函数,让表格行展示内容
+    this.handleCancle();
+  };
+
+  handleDel = (value) => () => {
+    confirm({
+      title: (
+        <>
+          <div>
+            确定要删除
+            <span style={{ color: "red", fontSize: 30 }}>{value.title}</span>
+          </div>
+        </>
+      ),
+      icon: <ExclamationCircleOutlined />,
+      onOk: async () => {
+        // 真正去删除这条数据
+        await reqDelSubject(value._id);
+        message.success("删除成功了");
+        // 重新请求获取最新的数据
+        // 如果当前页是最后一页,并且最后一页只有一条数据,并且不是第一页,那么请求新数据的时候,应该请求的上一页的数据
+
+        // 1.如何判断当前是否是第一页 this.currentPage !==1
+        // 2.如何判断当前页只剩下一条数据
+        //   说明:由于没有修改redux.所以redux中如果items.length为1,证明只有一条数据
+        // 3.如果判断是最后一页
+        // subjectList.total表示所有数据
+        // currentPage 表示 当前页
+        // pageSize 表示一页多少条
+        const totalPage = Math.ceil(
+          this.props.subjectList.total / this.pageSize
+        );
+        // 如果total === currentPage 表示最后一页
+        if (
+          this.currentPage !== 1 &&
+          this.props.subjectList.items.length === 1 &&
+          totalPage === this.currentPage
+        ) {
+          this.props.getSubjectList(--this.currentPage, this.pageSize);
+          return;
+        }
+        this.props.getSubjectList(this.currentPage, this.pageSize);
+      },
+    });
+  };
+
   render() {
     const columns = [
       // columns 定义表格的列
@@ -142,16 +231,22 @@ class Subject extends Component {
           if (this.state.subjectId === value._id) {
             return (
               <>
-                <Button type="primary" className="update-btn">
+                <Button
+                  type="primary"
+                  className="update-btn"
+                  onClick={this.handleUpdate}
+                >
                   确认
                 </Button>
-                <Button type="danger">取消</Button>
+                <Button type="danger" onClick={this.handleCancle}>
+                  取消
+                </Button>
               </>
             );
           }
           return (
             <>
-              <Tooltip>
+              <Tooltip title="更新课程分类">
                 <Button
                   type="primary"
                   className="update-btn"
@@ -160,7 +255,7 @@ class Subject extends Component {
                   <FormOutlined />
                 </Button>
               </Tooltip>
-              <Tooltip title="删除课程分类">
+              <Tooltip title="删除课程分类" onClick={this.handleDel(value)}>
                 <Button type="danger">
                   <DeleteOutlined />
                 </Button>
