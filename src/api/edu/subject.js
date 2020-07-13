@@ -26,3 +26,26 @@ export function reqGetSubjectList(page, limit) {
     method: "GET",
   });
 }
+
+// 获取二级课程分类
+export function reqGetSecSubjectList(parentId) {
+  // request返回一个promise
+  return request({
+    url: `${BASE_URL}/get/${parentId}`,
+    method: "GET",
+  });
+}
+// 添加课程分类
+export function reqAddSubjectList(title, parentId) {
+  console.log(title, parentId);
+  // request返回一个promise
+  return request({
+    url: `${BASE_URL}/save`,
+    // http://localhost:8888/admin/edu/subject/1/10
+    method: "POST",
+    data: {
+      title,
+      parentId,
+    },
+  });
+}
