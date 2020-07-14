@@ -101,6 +101,10 @@ class Chapter extends Component {
       this.props.getLessonList(record._id);
     }
   };
+  // 点击跳转到新增课时页面
+  handleGoAddLesson = (data) => () => {
+    this.props.history.push("/edu/chapter/addlesson", data);
+  };
   render() {
     const { previewVisible, previewImage, selectedRowKeys } = this.state;
 
@@ -121,27 +125,27 @@ class Chapter extends Component {
         width: 300,
         fixed: "right",
         render: (data) => {
-          if ("free" in data) {
-            return (
-              <div>
-                <Tooltip title="查看详情">
-                  <Button>
-                    <SettingOutlined />
-                  </Button>
-                </Tooltip>
-                <Tooltip title="更新章节">
-                  <Button type="primary" style={{ margin: "0 10px" }}>
-                    <FormOutlined />
-                  </Button>
-                </Tooltip>
-                <Tooltip title="删除章节">
-                  <Button type="danger">
-                    <DeleteOutlined />
-                  </Button>
-                </Tooltip>
-              </div>
-            );
-          }
+          // if ("free" in data) {
+          return (
+            <div>
+              <Tooltip title="新增课时">
+                <Button type="primary" onClick={this.handleGoAddLesson(data)}>
+                  <PlusOutlined />
+                </Button>
+              </Tooltip>
+              <Tooltip title="更新章节">
+                <Button type="primary" style={{ margin: "0 10px" }}>
+                  <FormOutlined />
+                </Button>
+              </Tooltip>
+              <Tooltip title="删除章节">
+                <Button type="danger">
+                  <DeleteOutlined />
+                </Button>
+              </Tooltip>
+            </div>
+          );
+          // }
         },
       },
     ];
