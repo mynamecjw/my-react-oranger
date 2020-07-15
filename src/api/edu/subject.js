@@ -71,3 +71,12 @@ export function reqDelSubject(id) {
     method: "DELETE",
   });
 }
+
+// 获取所有一级课程分类数据
+export function reqAllSubjectList() {
+  // request 返回一个promise
+  return request({
+    url: `${BASE_URL}`,
+    method: "GET",
+  });
+}

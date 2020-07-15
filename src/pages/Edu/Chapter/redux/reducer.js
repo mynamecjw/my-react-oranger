@@ -1,4 +1,9 @@
-import { GET_CHAPTER_LIST, GET_LESSON_LIST } from "./constant";
+import {
+  GET_CHAPTER_LIST,
+  GET_LESSON_LIST,
+  BATCH_DEL_LESSON,
+  BATCH_DEL_CHAPTER,
+} from "./constant";
 
 const initChapterList = {
   total: 0,
@@ -29,6 +34,50 @@ export default function chapterList(prevState = initChapterList, action) {
       return {
         ...prevState,
       };
+
+    case BATCH_DEL_CHAPTER:
+      // 删除指定的章节数据
+      // 1.需要指定删除那些 action.data 就是要删除的章节的ids(数组)
+      const chapterIds = action.data;
+      // 2.遍历章节数据,删除在ids中的数据
+      const newChapters = prevState.items.filter((chapter) => {
+        // 如果当前的chapter的id在chapter中,表示这条数据要删除,就应该返回false
+        if (chapterIds.indexOf(chapter._id) > -1) {
+          // 要删除的树种,包含这一条数据
+          return false;
+        }
+        return true;
+      });
+      return {
+        ...prevState,
+        items: newChapters,
+      };
+    case BATCH_DEL_LESSON:
+      console.log(111111111);
+      // 所有的课时数据是存储在对应章节的children属性中
+      // 1.先获取到所有要删除的课时的ids
+      let lessonIds = action.data;
+      // 2.遍历章节,找到章节之后,遍历章节的课时
+      let chapterList = prevState.items;
+      // 遍历章节
+      chapterList.forEach((chapter) => {
+        // 拿到章节之后,要遍历章节的children
+        // 遍历children的同时,如果找到要删除的数据,就要把这个数据删除掉
+        const newChildren = chapter.children.filter((lesson) => {
+          if (lessonIds.indexOf(lesson._id) > -1) {
+            return false;
+          }
+          return true;
+        });
+
+        // 给chapter的children属性重新复制
+        chapter.children = newChildren;
+      });
+      return {
+        ...prevState,
+        items: chapterList,
+      };
+
     default:
       return prevState;
   }
