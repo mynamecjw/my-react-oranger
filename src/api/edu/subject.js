@@ -73,7 +73,7 @@ export function reqDelSubject(id) {
 }
 
 // 获取所有一级课程分类数据
-export function reqAllSubjectList() {
+export function reqALLSubjectList() {
   // request 返回一个promise
   return request({
     url: `${BASE_URL}`,

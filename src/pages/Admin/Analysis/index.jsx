@@ -1,5 +1,8 @@
 import React, { Component } from "react";
 
+// 导入antd中栅格布局的组件
+// ROW 表示一行
+// Col 表示一列
 import { Row, Col, Statistic, Progress } from "antd";
 import { CaretUpOutlined, CaretDownOutlined } from "@ant-design/icons";
 
@@ -8,6 +11,9 @@ import Visits from "./Visits";
 import Bar from "./Bar";
 
 const firstRowCol = {
+  // xs, md, lg 表示不同的屏幕尺寸 具体见antd文档
+  // span表示col在行中占的格数
+  // 一行共24个格
   xs: { span: 24 },
   md: { span: 12 },
   lg: { span: 6 },
