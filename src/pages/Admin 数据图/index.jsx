@@ -1,22 +1,18 @@
 import React, { Component } from "react";
 
 import Analysis from "./Analysis";
-
-import Scales from "./Scales";
-
-// import Monitor from "./Monitor";
+import Monitor from "./Monitor";
 import Search from "./Search";
-import Static from "./Static";
+import Statistics from "./Statistics";
 
 export default class Admin extends Component {
   render() {
     return (
       <div>
         <Analysis />
-        <Scales />
-        {/* <Monitor /> */}
+        <Monitor />
         <Search />
-        <Static />
+        <Statistics />
       </div>
     );
   }
