@@ -1,6 +1,18 @@
-import Login from "@pages/Login";
-import NotFound from "@pages/404";
-import Oauth from "@pages/Login/components/Oauth";
+// 原来的方法
+// import Login from "@pages/Login";
+// import NotFound from "@pages/404";
+// import Oauth from "@pages/Login/components/Oauth";
+
+import { lazy } from "react";
+// 使用代码分割和懒加载的方式去写
+// 现在的方式: 实现了懒加载. 组件在使用的时候才会加载
+// lazy实现了懒加载 调用传入一个函数,函数需要返回一个promise
+// import实现了代码分割 返回一个promise
+// 注意: 如果使用了lazy,必须在使用懒加载的组件的时候,使用suspense包裹懒加载的组件
+// suspense必须要写一个fallback属性, 当正在加载组件的时候,会展示fallback里面的内容
+const Login = lazy(() => import("@pages/Login"));
+const NotFound = lazy(() => import("@pages/404"));
+const Oauth = lazy(() => import("@pages/Login/components/Oauth"));
 
 //#region
 /* export const asyncRoutes = [
@@ -216,6 +228,7 @@ export const defaultRoutes = [
     component: "Admin",
     icon: "home",
     name: "后台管理系统",
+    hidden:false
   },
   // { path: "*", redirect: "/404", component: NotFound, hidden: true }
 ];

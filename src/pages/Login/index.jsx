@@ -6,6 +6,7 @@ import LoginForm from "./LoginForm";
 
 import "./index.less";
 
+console.log("login组件加载了");
 export default function Login() {
   return (
     <div className="login">

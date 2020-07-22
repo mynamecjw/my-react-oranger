@@ -1,193 +1,130 @@
 import React, { Component } from "react";
-import { Layout, Menu, Dropdown, Breadcrumb } from "antd";
+import { Layout, Menu, Breadcrumb } from "antd";
+import { connect } from "react-redux";
+import { withRouter } from "react-router-dom";
 import {
+  DesktopOutlined,
+  PieChartOutlined,
+  FileOutlined,
+  TeamOutlined,
+  UserOutlined,
+  GlobalOutlined,
   MenuUnfoldOutlined,
   MenuFoldOutlined,
-  GlobalOutlined,
-  UserOutlined,
-  SettingOutlined,
-  LogoutOutlined,
 } from "@ant-design/icons";
-import { connect } from "react-redux";
-import { Link, withRouter } from "react-router-dom";
-
+// 导入sidermenu
 import SiderMenu from "../SiderMenu";
-import { AuthorizedRouter } from "@comps/Authorized";
-import { logout } from "@redux/actions/login";
-import { resetUser } from "../../components/Authorized/redux";
-import logo from "@assets/images/logo.png";
-import { findPathIndex } from "@utils/tools";
-
-// 引入组件公共样式
-import "@assets/css/common.less";
 import "./index.less";
 
-const { Header, Sider, Content } = Layout;
+import logo from "@assets/images/logo.png";
 
-@connect(
-  (state) => ({
-    user: state.user,
-  }),
-  {
-    logout,
-    resetUser,
-  }
-)
+const { Header, Content, Footer, Sider } = Layout;
+// const { SubMenu } = Menu;
 @withRouter
+@connect((state) => ({ user: state.user }))
 class PrimaryLayout extends Component {
   state = {
     collapsed: false,
   };
 
-  toggle = () => {
-    this.setState({
-      collapsed: !this.state.collapsed,
-    });
+  onCollapse = (collapsed) => {
+    console.log(collapsed);
+    this.setState({ collapsed });
   };
-
-  logout = ({ key }) => {
-    if (key !== "2") return;
-    this.props.logout().then(() => {
-      localStorage.removeItem("user_token");
-      this.props.resetUser();
-      this.props.history.replace("/login");
-    });
-  };
-
-  menu = (
-    <Menu style={{ width: 150 }} onClick={this.logout}>
-      <Menu.Item key="0">
-        <Link to="/account/list">
-          <UserOutlined />
-          个人中心
-        </Link>
-      </Menu.Item>
-      <Menu.Item key="1">
-        <Link to="/account/settings">
-          <SettingOutlined />
-          个人设置
-        </Link>
-      </Menu.Item>
-      <Menu.Divider />
-      <Menu.Item key="2">
-        <LogoutOutlined />
-        退出登录
-      </Menu.Item>
-    </Menu>
-  );
-
-  selectRoute = (routes = [], pathname) => {
-    for (let i = 0; i < routes.length; i++) {
-      const route = routes[i];
-      if (route.path === pathname) {
-        return route;
-      }
-      const children = route.children;
-
-      if (children && children.length) {
-        for (let j = 0; j < children.length; j++) {
-          const item = children[j];
-          // 跳过4级菜单
-          if (!item.path) continue;
-
-          let path = route.path + item.path;
-          /*
-            path: /acl/role/list
-              --> /acl/role
-            pathname: /acl/role/auth/xxx  
-          */
-          const index = findPathIndex(path, "/");
-          path = path.slice(0, index);
-          if (pathname.indexOf(path) !== -1) {
-            return {
-              ...route,
-              children: item,
-            };
-          }
-        }
-      }
-    }
-  };
-
-  renderBreadcrumb = (route) => {
-    if (this.props.location.pathname === "/") {
-      return (
-        <Breadcrumb>
-          <Breadcrumb.Item>首页</Breadcrumb.Item>
-        </Breadcrumb>
-      );
-    }
-
-    if (!route) return;
-
-    return (
-      <Breadcrumb>
-        <Breadcrumb.Item>
-          <Link to="/">首页</Link>
-        </Breadcrumb.Item>
-        <Breadcrumb.Item>{route.name}</Breadcrumb.Item>
-        <Breadcrumb.Item>{route.children.name}</Breadcrumb.Item>
-      </Breadcrumb>
-    );
-  };
-
   render() {
-    const { collapsed } = this.state;
-    const {
-      routes,
-      user,
-      location: { pathname },
-    } = this.props;
+    let { name, avatar, permissionList } = this.props.user;
 
-    const route = this.selectRoute(routes, pathname);
+    // 获取浏览器地址栏路径
+    const path = this.props.location.pathname;
+
+    // 定义一个正则
+    // 注意:正则后面加g,只提取符合条件的第一个
+    // 如果加了g,表示全局,会提取所有符合条件的
+    const reg = /[/][a-z]*/g;
+    const matchArr = path.match(reg);
+    // 获取一级path
+    const firstPath = matchArr[0];
+    // 获取二级path的第一个
+    const secPath = matchArr[1];
+    // 获取二级path的第二个
+    const thirdPath = matchArr[2] || "";
+
+    // 遍历,查找对应的一级菜单名称和二级菜单名称
+    let firstName;
+    let secName;
+    permissionList.forEach((item) => {
+      if (item.path === firstPath) {
+        firstName = item.name;
+        item.children.forEach((secItem) => {
+          if (secItem.path === secPath + thirdPath) {
+            secName = secItem.name;
+          }
+        });
+      }
+    });
 
     return (
       <Layout className="layout">
-        <Sider trigger={null} collapsible collapsed={collapsed}>
+        <Sider
+          collapsible
+          collapsed={this.state.collapsed}
+          onCollapse={this.onCollapse}
+        >
           <div className="logo">
-            <img src={logo} alt="logo" />
-            <h1 style={{ display: collapsed ? "none" : "block" }}>
-              硅谷教育管理系统
-            </h1>
+            <img src={logo} alt="" />
+            {/* <h1>硅谷教育管理系统</h1> */}
+            {!this.state.collapsed && <h1>硅谷教育管理系统</h1>}
           </div>
-          <SiderMenu routes={routes} defaultOpenKey={route && route.path} />
+          <SiderMenu></SiderMenu>
+          {/* <Menu theme="dark" defaultSelectedKeys={["1"]} mode="inline">
+            <Menu.Item key="1" icon={<PieChartOutlined />}>
+              Option 1
+            </Menu.Item>
+            <Menu.Item key="2" icon={<DesktopOutlined />}>
+              Option 2
+            </Menu.Item>
+            <SubMenu key="sub1" icon={<UserOutlined />} title="User">
+              <Menu.Item key="3">Tom</Menu.Item>
+              <Menu.Item key="4">Bill</Menu.Item>
+              <Menu.Item key="5">Alex</Menu.Item>
+            </SubMenu>
+            <SubMenu key="sub2" icon={<TeamOutlined />} title="Team">
+              <Menu.Item key="6">Team 1</Menu.Item>
+              <Menu.Item key="8">Team 2</Menu.Item>
+            </SubMenu>
+            <Menu.Item key="9" icon={<FileOutlined />} />
+          </Menu> */}
         </Sider>
+
         <Layout className="site-layout">
-          <Header className="site-layout-header">
-            <span className="site-layout-container">
-              {React.createElement(
-                collapsed ? MenuUnfoldOutlined : MenuFoldOutlined,
-                {
-                  className: "trigger",
-                  onClick: this.toggle,
-                }
-              )}
-              <span className="site-layout-right">
-                <Dropdown overlay={this.menu}>
-                  <span className="site-layout-user">
-                    <img src={user.avatar} alt="avatar" />
-                    <span>{user.name}</span>
-                  </span>
-                </Dropdown>
-                <span className="site-layout-lang">
-                  <GlobalOutlined />
-                </span>
-              </span>
-            </span>
+          <Header className="layout-header">
+            <img src={avatar} alt="" />
+            <span>{name}</span>
+            <GlobalOutlined />
           </Header>
-          <Content className="site-layout-background">
-            <div className="site-layout-header-wrap">
-              {this.renderBreadcrumb(route)}
-              <h3>{route && route.children && route.children.name}</h3>
+          <Content>
+            <div className="layout-nav">
+              {firstName === undefined ? (
+                "首页"
+              ) : (
+                <>
+                  <Breadcrumb>
+                    <Breadcrumb.Item>{firstName}</Breadcrumb.Item>
+                    <Breadcrumb.Item>{secName}</Breadcrumb.Item>
+                  </Breadcrumb>
+                  <h3>{secName}</h3>
+                </>
+              )}
             </div>
-            <div className="site-layout-content-wrap">
-              <AuthorizedRouter routes={routes} />
-            </div>
+
+            <div className="layout-content">Bill is a cat.</div>
           </Content>
+          <Footer style={{ textAlign: "center" }}>
+            Ant Design ©2018 Created by Ant UED
+          </Footer>
         </Layout>
       </Layout>
     );
   }
 }
-
 export default PrimaryLayout;

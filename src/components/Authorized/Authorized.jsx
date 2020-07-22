@@ -1,50 +1,30 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
+import { getUserInfo, getUserMenu } from "./redux";
+import Loading from '@comps/Loading'
 
-import Loading from "../Loading";
-import { getAccessRoutes, getUserInfo } from "./redux";
-import { updateLoading } from "@redux/actions/loading";
-
-@connect(
-  (state) => ({
-    user: state.user,
-    loading: state.loading,
-  }),
-  { getAccessRoutes, getUserInfo, updateLoading }
-)
+@connect(null, { getUserInfo, getUserMenu })
 class Authorized extends Component {
-  componentDidMount() {
-    // 发送请求，请求roles和permissionList
-    const {
-      user: { roles, permissionList },
-      getUserInfo,
-      getAccessRoutes,
-      updateLoading,
-    } = this.props;
-    
-    const promises = [];
-
-    if (!roles.length) {
-      promises.push(getUserInfo());
-    }
-
-    if (!permissionList.length) {
-      promises.push(getAccessRoutes());
-    }
-
-    Promise.all(promises).finally(() => {
-      updateLoading(false);
-    });
+  state={
+    loading:true
   }
-
+  async componentDidMount() {
+    // console.log(this.props)
+    // 这样一条一条的获取太慢
+    // this.props.getUserInfo();
+    // this.props.getUserMenu();
+    // 改成下面的方式
+     // 发送请求获取数据
+     let {getUserInfo,getUserMenu} = this.props
+     await Promise.all([getUserInfo(),getUserMenu()])
+     // 数据一定存储到了redux中
+     this.setState({
+       loading:false
+     })
+  }
   render() {
-    const {
-      user: { permissionList },
-      render,
-    } = this.props;
-
-    return <Loading>{render(permissionList)}</Loading>;
+    let {loading} = this.state
+    return loading ? <Loading></Loading>:this.props.render();
   }
 }
-
 export default Authorized;
